@@ -2,40 +2,34 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-const chars =
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
-
-const generateRandomString = (arr, length) => {
-  const getRandomIndex = (arr) => Math.floor(Math.random() * arr.length);
-  let result = [];
-
-  for (let i = 0; i < length; i++) {
-    const randomIndex = getRandomIndex(arr);
-    result.push(arr[randomIndex]);
-  }
-
-  return result.join("");
-};
-
+// Constants
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 
-app.use(express.urlencoded({ extended: true }));
+const chars =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
 
+// Generates random number based on range
+const getRandomNumber = (range) => Math.floor(Math.random() * range);
+
+// Generates random string, dependent on getRandomNumber
+const generateRandomString = (arr, length) => {
+  return new Array(length).fill(0).reduce((acc) => {
+    const randomIndex = getRandomNumber(arr.length);
+    return (acc += arr[randomIndex]);
+  }, "");
+};
+
+app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
+// @route /urls
+// @desc Allow users to shorten their long URLs into shortened links
+
 app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  res.send("<html>Go to <a href='urls'>/urls</a></html>\n");
 });
 
 app.get("/urls", (req, res) => {
