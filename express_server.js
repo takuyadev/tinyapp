@@ -58,7 +58,6 @@ app.get('/urls/:id', (req, res) => {
 app.post('/urls', (req, res) => {
   const randomString = generateRandomString(chars, 6);
   urlDatabase[randomString] = req.body.longURL;
-  console.log(urlDatabase);
   res.send('Ok'); // Respond with 'Ok' (we will replace this)
 });
 
@@ -78,10 +77,16 @@ app.post('/urls/:id/edit', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  console.log(req.body);
   res.cookie('username', req.body.username, { httpOnly: true });
-  res.send('Cookies');
+  res.redirect("/urls")
 });
+
+
+app.post('/logout', (req, res) => {
+  res.clearCookie("username")
+  res.redirect("/urls")
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
