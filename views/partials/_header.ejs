@@ -20,6 +20,9 @@
     </div>
     <form class="form-inline" action="/login" method="POST">
       <div class="form-group mb-2">
+        <% if(username) { %>
+        <label for="username">Logged in as: <%= username %>!</label>
+        <% } %>
         <input
           class="form-control"
           type="text"
