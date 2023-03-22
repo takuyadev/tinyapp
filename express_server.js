@@ -2,8 +2,13 @@ const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
 
-// Constants
+// Random character index
+const chars =
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('');
+
+// Database
 const urlDatabase = {
   b2xVn2: 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com',
@@ -22,9 +27,6 @@ const users = {
   },
 };
 
-const chars =
-  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('');
-
 // Generates random number based on range
 const getRandomNumber = (range) => Math.floor(Math.random() * range);
 
@@ -39,14 +41,16 @@ const generateRandomString = (arr, length) => {
 const getUserByEmail = (email) => {
   for (const id in users) {
     if (users[id].email === email) {
-      return user[id];
+      return users[id];
     }
   }
   return null;
 };
 
+// Middleware
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 app.set('view engine', 'ejs');
 
 // @route /urls
@@ -85,7 +89,6 @@ app.get('/urls/:id', (req, res) => {
 // @desc Updates shortened URLS
 // @method POST
 
-
 app.post('/urls', (req, res) => {
   const randomString = generateRandomString(chars, 6);
   urlDatabase[randomString] = req.body.longURL;
@@ -101,8 +104,6 @@ app.post('/urls/:id/edit', (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL;
   res.send('Edit');
 });
-
-
 
 // @route /u/:id
 // @desc Redirects user to website through shortened URL
@@ -125,12 +126,38 @@ app.get('/register', (req, res) => {
   res.render('urls_register', templateVars);
 });
 
+app.get('/login', (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies['user_id']],
+  };
+  res.render('urls_login', templateVars);
+});
+
 // @route /register, /login, /logout
 // @desc Allow users to authenticate through requests made on page
 // @method GET
 
 app.post('/login', (req, res) => {
-  res.cookie('user_id', req.body.email, { httpOnly: true });
+  const { email, password } = req.body;
+  const user = getUserByEmail(email);
+
+
+  if (!user) {
+    res.status(400).json({
+      success: false,
+      message: 'User does not exist',
+    });
+  }
+
+  if (user.password !== password) {
+    res.status(400).json({
+      success: false,
+      message: 'Incorrect password',
+    });
+  }
+
+  res.cookie('user_id', user.id, { httpOnly: true });
   res.redirect('/urls');
 });
 
@@ -140,7 +167,7 @@ app.post('/register', (req, res) => {
 
   const user = getUserByEmail(email);
 
-  if (!user) {
+  if (user) {
     res.status(400).json({
       success: false,
       message: 'User already exists',

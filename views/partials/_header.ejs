@@ -26,18 +26,14 @@
       </div>
     </form>
     <% } %> <% if(!user) { %>
-    <form class="form-inline" action="/login" method="POST">
-      <div class="form-group mb-2">
-        <input
-          class="form-control"
-          type="text"
-          name="username"
-          placeholder="Username"
-          style="width: 300px; margin: 1em"
-        />
-        <button type="submit" class="btn btn-outline-dark">Login</button>
-      </div>
-    </form>
+      <a href="/login"">
+        <i class="fa fa-anchor" aria-hidden="true"></i>
+        Login
+      </a>
+      <a href="/register"">
+        <i class="fa fa-anchor" aria-hidden="true"></i>
+        Register
+      </a>
     <% } %>
   </nav>
 </header>
