@@ -19,6 +19,7 @@
   <body>
     <%- include('partials/_header') %>
     <main style="margin: 1em">
+      <h3>Create an account</h3>
       <form class="form" action="/register" method="POST">
         <div class="form-group">
           <label for="">Email Address</label>
@@ -41,12 +42,8 @@
             placeholder="Enter password..."
           />
         </div>
-        <button type="btn btn-primary">Submit</button>
+        <button class="btn btn-primary" type="submit">Register</button>
       </form>
-      <a href="/login"">
-        <i class="fa fa-anchor" aria-hidden="true"></i>
-        Login
-      </a>
     </main>
     <!-- Bootstrap JS -->
     <script

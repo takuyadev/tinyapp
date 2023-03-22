@@ -144,9 +144,9 @@ app.post('/login', (req, res) => {
 
 
   if (!user) {
-    res.status(400).json({
+    res.status(403).json({
       success: false,
-      message: 'User does not exist',
+      message: 'User with provided email does not exist',
     });
   }
 
@@ -186,7 +186,7 @@ app.post('/register', (req, res) => {
 
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 app.listen(PORT, () => {
