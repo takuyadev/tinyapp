@@ -50,7 +50,8 @@ app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
 // @route /urls
-// @desc Allow users to shorten their long URLs into shortened links
+// @desc Renders and allow users to see shortened URLS
+// @method GET
 
 app.get('/', (req, res) => {
   res.send("<html>Go to <a href='urls'>/urls</a></html>\n");
@@ -80,15 +81,15 @@ app.get('/urls/:id', (req, res) => {
   res.render('urls_show', templateVars);
 });
 
+// @route /urls, /urls/:id
+// @desc Updates shortened URLS
+// @method POST
+
+
 app.post('/urls', (req, res) => {
   const randomString = generateRandomString(chars, 6);
   urlDatabase[randomString] = req.body.longURL;
   res.send('Ok'); // Respond with 'Ok' (we will replace this)
-});
-
-app.get('/u/:id', (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
 });
 
 app.post('/urls/:id/delete', (req, res) => {
@@ -101,6 +102,21 @@ app.post('/urls/:id/edit', (req, res) => {
   res.send('Edit');
 });
 
+
+
+// @route /u/:id
+// @desc Redirects user to website through shortened URL
+// @method GET
+
+app.get('/u/:id', (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
+});
+
+// @routes /register, /login
+// @desc Renders pages for authentication
+// @method GET
+
 app.get('/register', (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -108,6 +124,10 @@ app.get('/register', (req, res) => {
   };
   res.render('urls_register', templateVars);
 });
+
+// @route /register, /login, /logout
+// @desc Allow users to authenticate through requests made on page
+// @method GET
 
 app.post('/login', (req, res) => {
   res.cookie('user_id', req.body.email, { httpOnly: true });
