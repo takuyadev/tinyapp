@@ -36,6 +36,15 @@ const generateRandomString = (arr, length) => {
   }, '');
 };
 
+const getUserByEmail = (email) => {
+  for (const id in users) {
+    if (users[id].email === email) {
+      return user[id];
+    }
+  }
+  return null;
+};
+
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
@@ -50,7 +59,7 @@ app.get('/', (req, res) => {
 app.get('/urls', (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies["user_id"]],
+    user: users[req.cookies['user_id']],
   };
   res.render('urls_index', templateVars);
 });
@@ -58,7 +67,7 @@ app.get('/urls', (req, res) => {
 app.get('/urls/new', (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies["user_id"]],
+    user: users[req.cookies['user_id']],
   };
   res.render('urls_new', templateVars);
 });
@@ -95,26 +104,35 @@ app.post('/urls/:id/edit', (req, res) => {
 app.get('/register', (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies["user_id"]],
+    user: users[req.cookies['user_id']],
   };
   res.render('urls_register', templateVars);
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('user_id', req.body.username, { httpOnly: true });
+  res.cookie('user_id', req.body.email, { httpOnly: true });
   res.redirect('/urls');
 });
 
 app.post('/register', (req, res) => {
   const userId = generateRandomString(chars, 6);
+  const { email, password } = req.body;
+
+  const user = getUserByEmail(email);
+
+  if (!user) {
+    res.status(400).json({
+      success: false,
+      message: 'User already exists',
+    });
+  }
+
   users[userId] = {
+    email,
+    password,
     id: userId,
-    email: req.body.email,
-    password: req.body.password,
   };
 
-  console.log(userId)
-  console.log(req.body)
   res.cookie('user_id', userId);
   res.redirect('/urls');
 });
