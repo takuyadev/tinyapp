@@ -10,8 +10,15 @@ const chars =
 
 // Database
 const urlDatabase = {
-  b2xVn2: 'http://www.lighthouselabs.ca',
-  '9sm5xK': 'http://www.google.com',
+  b2xVn2: {
+    longURL: 'http://www.lighthouselabs.ca',
+    userId: 'userRandomID',
+  },
+
+  '9sm5xK': {
+    longURL: 'http://www.google.com',
+    userId: 'user2RandomID',
+  },
 };
 
 const users = {
@@ -27,6 +34,29 @@ const users = {
   },
 };
 
+// Handles error for both terminal and front-end
+class ErrorMessage {
+  constructor(error, message, redirect) {
+    this.error = error;
+    this.message = message;
+    this.redirect = redirect || '/urls';
+  }
+
+  sendError(res) {
+    res.send(
+      `${this.error}: ${this.message}\n <a href="${this.redirect}">Redirect to ${this.redirect}</a>`
+    );
+  }
+
+  renderError(res, data) {
+    res.status(404).render('urls_error', {
+      error: this.error,
+      message: this.message,
+      ...data,
+    });
+  }
+}
+
 // Generates random number based on range
 const getRandomNumber = (range) => Math.floor(Math.random() * range);
 
@@ -36,6 +66,27 @@ const generateRandomString = (arr, length) => {
     const randomIndex = getRandomNumber(arr.length);
     return (acc += arr[randomIndex]);
   }, '');
+};
+
+const getUserById = (userId) => {
+  for (const id in users) {
+    if (users[id].id === userId) {
+      return users[id];
+    }
+  }
+  return null;
+};
+
+const urlsForUser = (userId) => {
+  let result = {};
+
+  for (const urlId in urlDatabase) {
+    if (userId === urlDatabase[urlId].userId) {
+      result[urlId] = urlDatabase[urlId];
+    }
+  }
+
+  return result;
 };
 
 const getUserByEmail = (email) => {
@@ -62,26 +113,66 @@ app.get('/', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
+  const user = getUserById(req.cookies['user_id']);
+
+  if (!user) {
+    return new ErrorMessage(
+      'Unauthorized',
+      "Please login first before viewing your URLs.",
+      "/login"
+    ).sendError(res);
+  }
+
+  const urls = urlsForUser(req.cookies['user_id']);
+
   const templateVars = {
-    urls: urlDatabase,
+    urls: urls,
     user: users[req.cookies['user_id']],
   };
   res.render('urls_index', templateVars);
 });
 
 app.get('/urls/new', (req, res) => {
+  if (!req.cookies['user_id']) {
+    return res.redirect('/login');
+  }
+
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies['user_id']],
   };
+
   res.render('urls_new', templateVars);
 });
 
 app.get('/urls/:id', (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    return new ErrorMessage('Invalid URL', 'This URL does not exist').sendError(
+      res
+    );
+  }
+
+  if (!req.cookies['user_id']) {
+    return new ErrorMessage(
+      'Unauthorized',
+      'Please login first to view this URL'
+    ).sendError(res);
+  }
+
+  if (urlDatabase[req.params.id].userId !== req.cookies['user_id']) {
+    return new ErrorMessage(
+      'Unauthorized URL',
+      'You are unauthorized to view this URL'
+    ).sendError(res);
+  }
+
+  // If all checks passes
   const templateVars = {
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
     id: req.params.id,
+    user: users[req.cookies['user_id']],
   };
+
   res.render('urls_show', templateVars);
 });
 
@@ -90,19 +181,77 @@ app.get('/urls/:id', (req, res) => {
 // @method POST
 
 app.post('/urls', (req, res) => {
-  const randomString = generateRandomString(chars, 6);
-  urlDatabase[randomString] = req.body.longURL;
-  res.send('Ok'); // Respond with 'Ok' (we will replace this)
+  const user = getUserById(req.cookies['user_id']);
+
+  if (!user) {
+    return new ErrorMessage(
+      'Unauthorized',
+      "You're not authorized to add new pages. Please login again."
+    ).sendError(res);
+  }
+
+  const id = generateRandomString(chars, 6);
+
+  urlDatabase[id] = {
+    longURL: req.body.longURL,
+    userId: req.cookies['user_id'],
+  };
+
+  res.send('URL created. <a href="/urls">Go back</a>'); // Respond with 'Ok' (we will replace this)
 });
 
 app.post('/urls/:id/delete', (req, res) => {
+  const user = getUserById(req.cookies['user_id']);
+
+  if (!urlDatabase[req.params.id]) {
+    return new ErrorMessage('Invalid URL', 'This URL does not exist').sendError(
+      res
+    );
+  }
+
+  if (!user) {
+    return new ErrorMessage(
+      'Unauthorized',
+      'Please login first to view this URL'
+    ).sendError(res);
+  }
+
+  if (urlDatabase[req.params.id].userId !== req.cookies['user_id']) {
+    return new ErrorMessage(
+      'Unauthorized URL',
+      'You are unauthorized to delete this URL'
+    ).sendError(res);
+  }
+
   delete urlDatabase[req.params.id];
-  res.send('Deleted');
+  res.send('Deleted. <a href="/urls">Go back</a>');
 });
 
-app.post('/urls/:id/edit', (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
-  res.send('Edit');
+app.post('/urls/:id', (req, res) => {
+  const user = getUserById(req.cookies['user_id']);
+
+  if (!urlDatabase[req.params.id]) {
+    return new ErrorMessage('Invalid URL', 'This URL does not exist').sendError(
+      res
+    );
+  }
+
+  if (!user) {
+    return new ErrorMessage(
+      'Unauthorized',
+      'Please login first to edit this URL'
+    ).sendError(res);
+  }
+
+  if (urlDatabase[req.params.id].userId !== req.cookies['user_id']) {
+    return new ErrorMessage(
+      'Unauthorized URL',
+      'You are unauthorized to edit this URL'
+    ).sendError(res);
+  }
+
+  urlDatabase[req.params.id].longURL = req.body.longURL;
+  res.send('Editted. <a href="/urls">Go back</a>');
 });
 
 // @route /u/:id
@@ -110,7 +259,15 @@ app.post('/urls/:id/edit', (req, res) => {
 // @method GET
 
 app.get('/u/:id', (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
+
+  if (!longURL) {
+    return new ErrorMessage(
+      'Invalid URL',
+      'This URL does not exist. please try another URL'
+    ).sendError(res);
+  }
+
   res.redirect(longURL);
 });
 
@@ -119,14 +276,23 @@ app.get('/u/:id', (req, res) => {
 // @method GET
 
 app.get('/register', (req, res) => {
+  if (req.cookies['user_id']) {
+    res.redirect('/urls');
+  }
+
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies['user_id']],
   };
+
   res.render('urls_register', templateVars);
 });
 
 app.get('/login', (req, res) => {
+  if (req.cookies['user_id']) {
+    res.redirect('/urls');
+  }
+
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies['user_id']],
@@ -142,19 +308,18 @@ app.post('/login', (req, res) => {
   const { email, password } = req.body;
   const user = getUserByEmail(email);
 
-
   if (!user) {
-    res.status(403).json({
-      success: false,
-      message: 'User with provided email does not exist',
-    });
+    return new ErrorMessage(
+      'User not found',
+      'Could not find user with provided email.'
+    ).sendError(res);
   }
 
   if (user.password !== password) {
-    res.status(400).json({
-      success: false,
-      message: 'Incorrect password',
-    });
+    return new ErrorMessage(
+      'Incorrect credentials',
+      'Password is incorrect, please try again.'
+    ).sendError(res);
   }
 
   res.cookie('user_id', user.id, { httpOnly: true });
@@ -164,14 +329,13 @@ app.post('/login', (req, res) => {
 app.post('/register', (req, res) => {
   const userId = generateRandomString(chars, 6);
   const { email, password } = req.body;
-
   const user = getUserByEmail(email);
 
   if (user) {
-    res.status(400).json({
-      success: false,
-      message: 'User already exists',
-    });
+    return new ErrorMessage(
+      'User is exists',
+      'User with the provided email already exists.'
+    ).sendError(res);
   }
 
   users[userId] = {
@@ -187,6 +351,11 @@ app.post('/register', (req, res) => {
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
   res.redirect('/login');
+});
+
+app.post('/clear', (req, res) => {
+  res.clearCookie('user_id');
+  res.send("<span>Cleared<a href='/urls'>Go back</a></span>");
 });
 
 app.listen(PORT, () => {
