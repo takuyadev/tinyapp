@@ -33,23 +33,17 @@
           <% for (let id in urls) { %>
           <tr>
             <td><a href="/u/<%= id %>"><%= id %></a></td>
-            <td><%= urls[id] %></td>
+            <td><%= urls[id].longURL %></td>
             <td>
               <a href="/urls/<%= id %>">
-                <button
-                  class="btn btn-outline-primary"
-                  type="submit"
-                >
+                <button class="btn btn-outline-primary" type="submit">
                   Edit
                 </button>
               </a>
             </td>
             <td>
               <form method="POST" action="/urls/<%= id %>/delete">
-                <button
-                  class="btn btn-outline-danger"
-                  type="submit"
-                >
+                <button class="btn btn-outline-danger" type="submit">
                   Delete
                 </button>
               </form>
@@ -58,6 +52,7 @@
           <% } %>
         </tbody>
       </table>
+      <%- include('partials/_dev-clearcookie') %>
     </main>
     <!-- Bootstrap JS -->
     <script
