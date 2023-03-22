@@ -2,16 +2,30 @@ const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
 
-// Constants
+// Random character index
+const chars =
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('');
+
+// Database
 const urlDatabase = {
   b2xVn2: 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com',
 };
 
-
-const chars =
-  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('');
+const users = {
+  userRandomID: {
+    id: 'userRandomID',
+    email: 'user@example.com',
+    password: 'purple-monkey-dinosaur',
+  },
+  user2RandomID: {
+    id: 'user2RandomID',
+    email: 'user2@example.com',
+    password: 'dishwasher-funk',
+  },
+};
 
 // Generates random number based on range
 const getRandomNumber = (range) => Math.floor(Math.random() * range);
@@ -24,12 +38,24 @@ const generateRandomString = (arr, length) => {
   }, '');
 };
 
-app.use(cookieParser())
+const getUserByEmail = (email) => {
+  for (const id in users) {
+    if (users[id].email === email) {
+      return users[id];
+    }
+  }
+  return null;
+};
+
+// Middleware
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 app.set('view engine', 'ejs');
 
 // @route /urls
-// @desc Allow users to shorten their long URLs into shortened links
+// @desc Renders and allow users to see shortened URLS
+// @method GET
 
 app.get('/', (req, res) => {
   res.send("<html>Go to <a href='urls'>/urls</a></html>\n");
@@ -38,13 +64,17 @@ app.get('/', (req, res) => {
 app.get('/urls', (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies['username'],
+    user: users[req.cookies['user_id']],
   };
   res.render('urls_index', templateVars);
 });
 
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  const templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies['user_id']],
+  };
+  res.render('urls_new', templateVars);
 });
 
 app.get('/urls/:id', (req, res) => {
@@ -55,15 +85,14 @@ app.get('/urls/:id', (req, res) => {
   res.render('urls_show', templateVars);
 });
 
+// @route /urls, /urls/:id
+// @desc Updates shortened URLS
+// @method POST
+
 app.post('/urls', (req, res) => {
   const randomString = generateRandomString(chars, 6);
   urlDatabase[randomString] = req.body.longURL;
   res.send('Ok'); // Respond with 'Ok' (we will replace this)
-});
-
-app.get('/u/:id', (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
 });
 
 app.post('/urls/:id/delete', (req, res) => {
@@ -76,17 +105,89 @@ app.post('/urls/:id/edit', (req, res) => {
   res.send('Edit');
 });
 
-app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username, { httpOnly: true });
-  res.redirect("/urls")
+// @route /u/:id
+// @desc Redirects user to website through shortened URL
+// @method GET
+
+app.get('/u/:id', (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
+// @routes /register, /login
+// @desc Renders pages for authentication
+// @method GET
+
+app.get('/register', (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies['user_id']],
+  };
+  res.render('urls_register', templateVars);
+});
+
+app.get('/login', (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies['user_id']],
+  };
+  res.render('urls_login', templateVars);
+});
+
+// @route /register, /login, /logout
+// @desc Allow users to authenticate through requests made on page
+// @method GET
+
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  const user = getUserByEmail(email);
+
+
+  if (!user) {
+    res.status(403).json({
+      success: false,
+      message: 'User with provided email does not exist',
+    });
+  }
+
+  if (user.password !== password) {
+    res.status(400).json({
+      success: false,
+      message: 'Incorrect password',
+    });
+  }
+
+  res.cookie('user_id', user.id, { httpOnly: true });
+  res.redirect('/urls');
+});
+
+app.post('/register', (req, res) => {
+  const userId = generateRandomString(chars, 6);
+  const { email, password } = req.body;
+
+  const user = getUserByEmail(email);
+
+  if (user) {
+    res.status(400).json({
+      success: false,
+      message: 'User already exists',
+    });
+  }
+
+  users[userId] = {
+    email,
+    password,
+    id: userId,
+  };
+
+  res.cookie('user_id', userId);
+  res.redirect('/urls');
+});
 
 app.post('/logout', (req, res) => {
-  res.clearCookie("username")
-  res.redirect("/urls")
+  res.clearCookie('user_id');
+  res.redirect('/login');
 });
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
