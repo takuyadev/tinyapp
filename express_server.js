@@ -129,11 +129,19 @@ app.get('/urls/:id', (req, res) => {
 // @details Add URL to database
 app.post('/urls', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
+  
 
   if (!user) {
     return new ErrorHandler(
       'Unauthorized',
       "You're not authorized to add new pages. Please login again."
+    ).renderError(res, user);
+  }
+
+  if (!req.body.longURL) {
+    return new ErrorHandler(
+      'Missing data',
+      "Please provide URL to shorten"
     ).renderError(res, user);
   }
 
