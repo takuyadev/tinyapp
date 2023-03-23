@@ -1,5 +1,11 @@
 # TinyApp Project
 
+## Live Website
+It will take a few seconds to load, as the server needs to go up first.
+https://tinyapp-0ryn.onrender.com
+
+## Summary
+
 TinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs (à la bit.ly).
 
 ## Final Product
