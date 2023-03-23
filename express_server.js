@@ -6,6 +6,7 @@ import {
   getUserById,
   generateRandomString,
   urlsForUser,
+  ErrorHandler
 } from './utils/index.js';
 import express from 'express';
 import cookieSession from 'cookie-session';
@@ -48,7 +49,7 @@ app.get('/urls', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
 
   if (!user) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Unauthorized',
       'Please login first before viewing your URLs.',
       '/login'
@@ -84,21 +85,21 @@ app.get('/urls/:id', (req, res) => {
   const user = USER_DATABASE[req.session.user_id];
 
   if (!URL_DATABASE[req.params.id]) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Invalid URL',
       'This URL does not exist'
     ).renderError(res, user);
   }
 
   if (!req.session.user_id) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Unauthorized',
       'Please login first to view this URL'
     ).renderError(res, user);
   }
 
   if (URL_DATABASE[req.params.id].userId !== req.session.user_id) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Unauthorized URL',
       'You are unauthorized to view this URL'
     ).renderError(res, user);
@@ -125,7 +126,7 @@ app.post('/urls', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
 
   if (!user) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Unauthorized',
       "You're not authorized to add new pages. Please login again."
     ).renderError(res, user);
@@ -149,21 +150,21 @@ app.post('/urls/:id/delete', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
 
   if (!URL_DATABASE[req.params.id]) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Invalid URL',
       'This URL does not exist'
     ).renderError(res, user);
   }
 
   if (!user) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Unauthorized',
       'Please login first to edit this URL'
     ).renderError(res, user);
   }
 
   if (URL_DATABASE[req.params.id].userId !== req.session.user_id) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Unauthorized URL',
       'You are unauthorized to edit this URL'
     ).renderError(res, user);
@@ -178,21 +179,21 @@ app.post('/urls/:id', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
 
   if (!URL_DATABASE[req.params.id]) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Invalid URL',
       'This URL does not exist'
     ).renderError(res, user);
   }
 
   if (!user) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Unauthorized',
       'Please login first to edit this URL'
     ).renderError(res, user);
   }
 
   if (URL_DATABASE[req.params.id].userId !== req.session.user_id) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Unauthorized URL',
       'You are unauthorized to edit this URL'
     ).renderError(res, user);
@@ -212,7 +213,7 @@ app.get('/u/:id', (req, res) => {
   const url = URL_DATABASE[req.params.id];
 
   if (!url) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Invalid URL',
       'This URL does not exist. please try another URL'
     ).renderError(res, user);
@@ -268,7 +269,7 @@ app.post('/login', (req, res) => {
   const user = getUserByEmail(email, USER_DATABASE);
 
   if (!user) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'User not found',
       'Could not find user with provided email.'
     ).renderError(res, user);
@@ -277,7 +278,7 @@ app.post('/login', (req, res) => {
   const comparePassword = bcryptjs.compareSync(password, user.password);
 
   if (!comparePassword) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'Incorrect credentials',
       'Password is incorrect, please try again.'
     ).renderError(res, user);
@@ -295,7 +296,7 @@ app.post('/register', (req, res) => {
   const user = getUserByEmail(email, USER_DATABASE);
 
   if (user) {
-    return new ErrorMessage(
+    return new ErrorHandler(
       'User is exists',
       'User with the provided email already exists.'
     ).renderError(res, user);
