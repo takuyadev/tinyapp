@@ -6,18 +6,21 @@ import {
   getUserById,
   generateRandomString,
   urlsForUser,
-  ErrorHandler
+  ErrorHandler,
 } from './utils/index.js';
 import express from 'express';
 import cookieSession from 'cookie-session';
+import methodOverride from 'method-override';
 import bcryptjs from 'bcryptjs';
 import morgan from 'morgan';
+import { countUniqueVisits } from './utils/server/countUniqueVisits.js';
 
 // Server
 const app = express();
 
 // Middlewares
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'));
 app.use(morgan('dev'));
 app.set('view engine', 'ejs');
 app.use(
@@ -110,6 +113,8 @@ app.get('/urls/:id', (req, res) => {
     longURL: URL_DATABASE[req.params.id].longURL,
     created: URL_DATABASE[req.params.id].created,
     visited: URL_DATABASE[req.params.id].visited,
+    uniqueVisits: URL_DATABASE[req.params.id].uniqueVisits,
+    uniqueCount: countUniqueVisits(URL_DATABASE[req.params.id].uniqueVisits),
     id: req.params.id,
     user: USER_DATABASE[req.session.user_id],
   };
@@ -139,6 +144,7 @@ app.post('/urls', (req, res) => {
     longURL: req.body.longURL,
     userId: req.session.user_id,
     created: new Date(),
+    uniqueVisits: [],
     visited: 0,
   };
 
@@ -146,7 +152,7 @@ app.post('/urls', (req, res) => {
 });
 
 // @details Delete URL on database
-app.post('/urls/:id/delete', (req, res) => {
+app.delete('/urls/:id', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
 
   if (!URL_DATABASE[req.params.id]) {
@@ -175,7 +181,7 @@ app.post('/urls/:id/delete', (req, res) => {
 });
 
 // @details Update URL based on params
-app.post('/urls/:id', (req, res) => {
+app.put('/urls/:id', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
 
   if (!URL_DATABASE[req.params.id]) {
@@ -218,9 +224,14 @@ app.get('/u/:id', (req, res) => {
       'This URL does not exist. please try another URL'
     ).renderError(res, user);
   }
+  const visitData = {
+    created: new Date(),
+    id: req.session.user_id,
+  };
 
   URL_DATABASE[req.params.id].visited += 1;
-  res.redirect(longURL, user);
+  URL_DATABASE[req.params.id].uniqueVisits.push(visitData);
+  res.redirect(url.longURL);
 });
 
 // @routes /register, /login
@@ -268,7 +279,7 @@ app.post('/login', (req, res) => {
   const { email, password } = req.body;
   const user = getUserByEmail(email, USER_DATABASE);
 
-  if (!email || !password){
+  if (!email || !password) {
     return new ErrorHandler(
       'Missing requirements',
       'Please fill out your email and password.'
@@ -302,8 +313,7 @@ app.post('/register', (req, res) => {
   const { email, password } = req.body;
   const user = getUserByEmail(email, USER_DATABASE);
 
-
-  if (!email || !password){
+  if (!email || !password) {
     return new ErrorHandler(
       'Missing requirements',
       'Please fill out your email and password.'

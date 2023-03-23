@@ -22,12 +22,17 @@
         </p>
         <p>Created on: <%= created.toLocaleDateString("en-US") %></p>
         <p>Visited: <%= visited %></p>
+        <p>Unique Visits: <%= uniqueCount %></p>
       </div>
       <div
         class="card-footer text-muted d-flex justify-content-center flex-column align-items-center"
       >
         <h3>Edit</h3>
-        <form class="form-inline" action="/urls/<%= id %>" method="POST">
+        <form
+          class="form-inline"
+          action="/urls/<%= id %>?_method=PUT"
+          method="POST"
+        >
           <div class="form-group mb-2">
             <label for="longURL">New URL:</label>
             <input
@@ -41,6 +46,26 @@
           </div>
         </form>
       </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">User</th>
+            <th scope="col">Visited</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% uniqueVisits.forEach(function(visit){ %>
+          <tr>
+            <td>
+              <%= visit.id %>
+            </td>
+            <td>
+              <%= visit.created.toLocaleDateString("en-US") %>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
     <!-- Bootstrap JS -->
     <script
