@@ -268,11 +268,18 @@ app.post('/login', (req, res) => {
   const { email, password } = req.body;
   const user = getUserByEmail(email, USER_DATABASE);
 
+  if (!email || !password){
+    return new ErrorHandler(
+      'Missing requirements',
+      'Please fill out your email and password.'
+    ).renderError(res, undefined);
+  }
+
   if (!user) {
     return new ErrorHandler(
       'User not found',
       'Could not find user with provided email.'
-    ).renderError(res, user);
+    ).renderError(res, undefined);
   }
 
   const comparePassword = bcryptjs.compareSync(password, user.password);
@@ -281,7 +288,7 @@ app.post('/login', (req, res) => {
     return new ErrorHandler(
       'Incorrect credentials',
       'Password is incorrect, please try again.'
-    ).renderError(res, user);
+    ).renderError(res, undefined);
   }
 
   // If all checks passes, provide user with auth cookie
@@ -295,11 +302,19 @@ app.post('/register', (req, res) => {
   const { email, password } = req.body;
   const user = getUserByEmail(email, USER_DATABASE);
 
+
+  if (!email || !password){
+    return new ErrorHandler(
+      'Missing requirements',
+      'Please fill out your email and password.'
+    ).renderError(res, undefined);
+  }
+
   if (user) {
     return new ErrorHandler(
-      'User is exists',
+      'User already exists',
       'User with the provided email already exists.'
-    ).renderError(res, user);
+    ).renderError(res, undefined);
   }
 
   const hashedPassword = bcryptjs.hashSync(password, 10);
