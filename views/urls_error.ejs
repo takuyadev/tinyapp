@@ -18,12 +18,14 @@
   </head>
   <body>
     <%- include('partials/_header') %>
-    <h3>
-      <%= error || "Error" %>
-    </h3>
-    <p>
-      <%= message || "Unknown error"%>
-    </p>
+    <div class="d-flex gap-4 flex-column align-items-center">
+      <h3 class="fw-bolder mt-4">
+        <%= error || "Error" %>
+      </h3>
+      <p>
+        <%= message || "Unknown error"%>
+      </div>
+      </p>
   </body>    
     <!-- Bootstrap JS -->
     <script

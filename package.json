@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "start": "nodemon -L express_server.js"
   },
   "repository": {
@@ -21,10 +21,13 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
+    "cookie-session": "^2.0.0",
     "ejs": "^3.1.9",
     "express": "^4.18.2"
   },
   "devDependencies": {
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.21"
   }
