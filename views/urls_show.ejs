@@ -20,13 +20,8 @@
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
-      <p>Created on: 
-        <%= created.toLocaleDateString("en-US") %>
-      </p>
-      <p>Visited: 
-        <%= visited %>
-      </p>
-
+        <p>Created on: <%= created.toLocaleDateString("en-US") %></p>
+        <p>Visited: <%= visited %></p>
       </div>
       <div
         class="card-footer text-muted d-flex justify-content-center flex-column align-items-center"
