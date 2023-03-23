@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
+const bcrypt = require('bcryptjs')
 
 // Random character index
 const chars =
@@ -315,7 +316,8 @@ app.post('/login', (req, res) => {
     ).sendError(res);
   }
 
-  if (user.password !== password) {
+  const comparePassword = bcrypt.compareSync(password, user.password)
+  if (!comparePassword) {
     return new ErrorMessage(
       'Incorrect credentials',
       'Password is incorrect, please try again.'
@@ -338,9 +340,12 @@ app.post('/register', (req, res) => {
     ).sendError(res);
   }
 
+  const hashedPassword = bcrypt.hashSync(password, 10)
+
+  console.log("hashed password:", hashedPassword)
   users[userId] = {
     email,
-    password,
+    password: hashedPassword,
     id: userId,
   };
 
