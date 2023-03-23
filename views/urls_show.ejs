@@ -20,12 +20,19 @@
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
+      <p>Created on: 
+        <%= created.toLocaleDateString("en-US") %>
+      </p>
+      <p>Visited: 
+        <%= visited %>
+      </p>
+
       </div>
       <div
         class="card-footer text-muted d-flex justify-content-center flex-column align-items-center"
       >
         <h3>Edit</h3>
-        <form class="form-inline" action="/urls/<%= id %>/edit" method="POST">
+        <form class="form-inline" action="/urls/<%= id %>" method="POST">
           <div class="form-group mb-2">
             <label for="longURL">New URL:</label>
             <input
@@ -41,7 +48,6 @@
       </div>
       <%- include('partials/_dev-clearcookie') %>
     </div>
-
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
