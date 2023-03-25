@@ -129,7 +129,6 @@ app.get('/urls/:id', (req, res) => {
 // @details Add URL to database
 app.post('/urls', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
-  
 
   if (!user) {
     return new ErrorHandler(
@@ -141,7 +140,7 @@ app.post('/urls', (req, res) => {
   if (!req.body.longURL) {
     return new ErrorHandler(
       'Missing data',
-      "Please provide URL to shorten"
+      'Please provide URL to shorten'
     ).renderError(res, user);
   }
 
@@ -350,7 +349,7 @@ app.post('/register', (req, res) => {
 
 // Clear cookies when logout is pressed, and redirect
 app.post('/logout', (req, res) => {
-  req.session.user_id = null;
+  req.session = null;
   res.redirect('/login');
 });
 
