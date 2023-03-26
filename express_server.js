@@ -250,7 +250,7 @@ app.get('/register', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
 
   if (user) {
-    res.redirect('/urls');
+    return res.redirect('/urls');
   }
 
   const templateVars = {
@@ -266,7 +266,7 @@ app.get('/login', (req, res) => {
   const user = getUserById(req.session.user_id, USER_DATABASE);
 
   if (user) {
-    res.redirect('/urls');
+    return res.redirect('/urls');
   }
 
   const templateVars = {
